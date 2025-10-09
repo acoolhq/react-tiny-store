@@ -18,7 +18,7 @@ function withProvider(initial: AppState) {
   return { wrapper };
 }
 
-describe("@acool/react-tiny-store - proper cases", () => {
+describe("@acoolhq/react-tiny-store - proper cases", () => {
   it("uses getServerSnapshot during SSR", () => {
     const initial: AppState = {
       todos: [{ id: "1", text: "A" }],
@@ -313,7 +313,7 @@ describe("@acool/react-tiny-store - proper cases", () => {
   });
 });
 
-describe("@acool/react-tiny-store - context error throws (outside <Provider>)", () => {
+describe("@acoolhq/react-tiny-store - context error throws (outside <Provider>)", () => {
   type AppState = { count: number; ui: { modalOpen: boolean } };
 
   const {

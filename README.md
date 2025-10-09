@@ -1,4 +1,4 @@
-# @acool/react-tiny-store
+# @acoolhq/react-tiny-store
 
 Tiny, reducer-less React state built on `useSyncExternalStore`.
 
@@ -14,7 +14,7 @@ Tiny, reducer-less React state built on `useSyncExternalStore`.
 ## Install
 
 ```bash
-npm i @acool/react-tiny-store
+npm i @acoolhq/react-tiny-store
 # peer deps
 npm i react react-dom
 ```
@@ -27,7 +27,7 @@ npm i react react-dom
 
 ```tsx
 // appStore.ts
-import { createContextSync } from "@acool/react-tiny-store";
+import { createContextSync } from "@acoolhq/react-tiny-store";
 
 export type Todo = { id: string; text: string; optimistic?: boolean };
 export type AppState = { todos: Todo[]; ui: { modalOpen: boolean } };

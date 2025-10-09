@@ -1,4 +1,4 @@
-import { createContextSync } from "@acool/react-tiny-store";
+import { createContextSync } from "@acoolhq/react-tiny-store";
 
 export type Todo = { id: string; text: string; optimistic?: boolean };
 export type AppState = { todos: Todo[]; ui: { modalOpen: boolean } };
