@@ -18,6 +18,17 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anirudhchintha95/react-tiny-store.git"
+  },
+  "homepage": "https://github.com/anirudhchintha95/react-tiny-store#readme",
+  "bugs": {
+    "url": "https://github.com/anirudhchintha95/react-tiny-store/issues"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --sourcemap",
     "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
