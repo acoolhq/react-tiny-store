@@ -1,6 +1,6 @@
 {
   "name": "@acool/react-tiny-store",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "description": "Tiny useSyncExternalStore-powered context store: useSelector, useActions, createSlice — hydrate-safe, reducer-less.",
   "license": "MIT",
   "type": "module",
