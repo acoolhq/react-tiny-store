@@ -154,13 +154,7 @@ export function createContextSync<T>() {
       return { state, get, actions };
     }
 
-    // expose pure fns in case controllers want to reuse them
-    (useSlice as any).pure = fns;
-    return useSlice as (() => {
-      state: S;
-      get: () => S;
-      actions: Bound<FNS>;
-    }) & { pure: FNS };
+    return useSlice;
   }
 
   return { Provider, useSelector, useActions, bindActions, createSlice };
