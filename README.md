@@ -6,8 +6,8 @@ Tiny, reducer-less React state built on `useSyncExternalStore`.
 - **No reducers required** — write pure updaters or do effects in controllers
 - **Three primitives via a factory**: `Provider`, `useSelector`, `useActions` / `bindActions`, `createSlice`
 
-![Build & Test](https://github.com/anirudhchintha95/react-tiny-store/actions/workflows/ci.yml/badge.svg?branch=main)
-![TypeScript](https://github.com/anirudhchintha95/react-tiny-store/actions/workflows/types.yml/badge.svg?branch=main)
+![Build & Test](https://github.com/acoolhq/react-tiny-store/actions/workflows/ci.yml/badge.svg?branch=main)
+![TypeScript](https://github.com/acoolhq/react-tiny-store/actions/workflows/types.yml/badge.svg?branch=main)
 
 ---
 
