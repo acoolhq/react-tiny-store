@@ -5,3 +5,14 @@ dist
 coverage
 rts-bench
 .npmrc
+
+# ── VitePress (build/cache)
+docs/.vitepress/cache
+docs/.vitepress/dist
+docs/.vitepress/tmp
+
+# ── TypeDoc output (generated each build)
+docs/api/
+
+# ── Misc
+docs/**/.DS_Store
