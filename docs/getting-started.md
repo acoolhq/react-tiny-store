@@ -21,7 +21,10 @@ function TodoCount() {
   return <span>{count}</span>;
 }
 
-// Update
+// ❌ Avoid calling store.getState() inside render; it won't subscribe.
+// Controllers (useActions/bindActions) can call api.get() safely outside render.
+
+// Update (always return new objects—state is treated as immutable)
 function AddTodoButton() {
   return (
     <button
@@ -40,6 +43,13 @@ function AddTodoButton() {
 
 **Why selectors?** Only components that read a value will re-render when that value changes.  
 Updating `tick` won’t re-render a component that only selects `todos`, and vice-versa.
+
+> **Immutable updates only:** `store.setState` and `store.replace` expect you to return **new** objects/primitives. Mutating the existing state object will leak changes into `getInitialState()` and make `reset()` unusable. Clone first, then return the new value.
+
+> **Reset when needed:** `makeStore` creates a singleton store. If you re-use that store across screens, call `store.reset()` on teardown to avoid stale data:
+> ```tsx
+> useEffect(() => () => store.reset(), []);
+> ```
 
 ---
 
@@ -74,6 +84,8 @@ function TodoList() {
   const todos = Tiny.useSelector(s => s.todos);
   return <ul>{todos.map(t => <li key={t.id}>{t.text}</li>)}</ul>;
 }
+
+// When this component unmounts we still keep the store alive (context-owned).
 ```
 
 ---

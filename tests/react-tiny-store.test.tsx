@@ -3,7 +3,13 @@ import { renderToString } from "react-dom/server";
 import { describe, it, expect, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 
-import { createContextSync } from "../src";
+import {
+  batch,
+  bindStoreActions,
+  createContextSync,
+  makeStore,
+  useStoreSelector,
+} from "../src";
 
 type Todo = { id: string; text: string; optimistic?: boolean };
 type AppState = { todos: Todo[]; ui: { modalOpen: boolean } };
@@ -18,7 +24,27 @@ function withProvider(initial: AppState) {
   return { wrapper };
 }
 
-describe("@acoolhq/react-tiny-store - proper cases", () => {
+describe("@acoolhq/react-tiny-store - success cases", () => {
+  it("store.reset restores initial state and de-dupes when already reset", () => {
+    const store = makeStore({ count: 0 });
+    const listener = vi.fn();
+    const unsubscribe = store.subscribe(listener);
+
+    store.setState({ count: 2 });
+    expect(store.getState().count).toBe(2);
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    store.reset();
+    expect(store.getState().count).toBe(0);
+    expect(listener).toHaveBeenCalledTimes(2);
+
+    store.reset();
+    expect(store.getState().count).toBe(0);
+    expect(listener).toHaveBeenCalledTimes(2);
+
+    unsubscribe();
+  });
+
   it("uses getServerSnapshot during SSR", () => {
     const initial: AppState = {
       todos: [{ id: "1", text: "A" }],
@@ -258,6 +284,9 @@ describe("@acoolhq/react-tiny-store - proper cases", () => {
       replaceAll(next: AppState) {
         api.replace(next);
       },
+      resetAll() {
+        api.reset();
+      },
     }));
 
     function useEnv() {
@@ -279,6 +308,12 @@ describe("@acoolhq/react-tiny-store - proper cases", () => {
     });
 
     expect(result.current.len).toBe(1);
+
+    act(() => {
+      result.current.actions.resetAll();
+    });
+
+    expect(result.current.len).toBe(0);
   });
 
   it("api.set replaces state with a plain value (non-functional path)", () => {
@@ -311,9 +346,135 @@ describe("@acoolhq/react-tiny-store - proper cases", () => {
 
     expect(result.current.open).toBe(true);
   });
+
+  it("bindStoreActions returns memoized actions based on deps", () => {
+    const store = makeStore({ todos: [] as string[] });
+    const useTodoActions = bindStoreActions(store, (api) => ({
+      add(text: string) {
+        api.set((prev) => ({ todos: [...prev.todos, text] }));
+      },
+      clear() {
+        api.replace({ todos: [] });
+      },
+    }));
+
+    const renders: Array<ReturnType<typeof useTodoActions>> = [];
+
+    const { result, rerender } = renderHook(
+      ({ dep }) => {
+        const actions = useTodoActions([dep]);
+        renders.push(actions);
+        return actions;
+      },
+      { initialProps: { dep: "a" } }
+    );
+
+    expect(store.getState().todos).toEqual([]);
+
+    act(() => {
+      result.current.add("one");
+    });
+    expect(store.getState().todos).toEqual(["one"]);
+
+    rerender({ dep: "a" });
+    expect(renders[renders.length - 1]).toBe(renders[0]);
+
+    rerender({ dep: "b" });
+    expect(renders[renders.length - 1]).not.toBe(renders[0]);
+
+    act(() => {
+      result.current.clear();
+    });
+    expect(store.getState().todos).toEqual([]);
+  });
 });
 
-describe("@acoolhq/react-tiny-store - context error throws (outside <Provider>)", () => {
+describe("@acoolhq/react-tiny-store - batch", () => {
+  it("defers notifications until the outer batch completes", () => {
+    const store = makeStore({ count: 0 });
+    const received: number[] = [];
+
+    store.subscribe(() => {
+      received.push(store.getState().count);
+    });
+
+    batch(() => {
+      store.setState((s) => ({ count: s.count + 1 }));
+      // store states are updated simultaneouly.
+      expect(store.getState().count).toEqual(1);
+      expect(received).toEqual([]);
+      store.setState((s) => ({ count: s.count + 1 }));
+      expect(received).toEqual([]);
+      expect(store.getState().count).toEqual(2);
+    });
+
+    expect(received).toEqual([2]);
+  });
+
+  it("flushes listeners only once for nested batches", () => {
+    const store = makeStore({ count: 0 });
+    const listener = vi.fn();
+
+    store.subscribe(listener);
+
+    batch(() => {
+      store.setState((s) => ({ count: s.count + 1 }));
+      expect(store.getState().count).toEqual(1);
+      batch(() => {
+        store.setState({ count: 2 });
+        expect(store.getState().count).toEqual(2);
+        store.setState((s) => ({ count: s.count + 1 }));
+        expect(store.getState().count).toEqual(3);
+      });
+      store.setState((s) => ({ count: s.count + 1 }));
+      expect(store.getState().count).toEqual(4);
+    });
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(store.getState().count).toBe(4);
+  });
+
+  it("batches notifications across multiple stores when using selectors", () => {
+    type Counter = { count: number };
+    const storeA = makeStore<Counter>({ count: 0 });
+    const storeB = makeStore<Counter>({ count: 0 });
+
+    const renders: Array<[number, number]> = [];
+
+    function useEnv() {
+      const countA = useStoreSelector(storeA, (s) => s.count);
+      const countB = useStoreSelector(storeB, (s) => s.count);
+      const incA = React.useCallback(
+        () => storeA.setState((prev) => ({ count: prev.count + 1 })),
+        []
+      );
+      const incB = React.useCallback(
+        () => storeB.setState((prev) => ({ count: prev.count + 1 })),
+        []
+      );
+      renders.push([countA, countB]);
+      return { countA, countB, incA, incB };
+    }
+
+    const { result } = renderHook(() => useEnv());
+    expect(renders).toEqual([[0, 0]]);
+
+    act(() => {
+      batch(() => {
+        result.current.incA();
+        result.current.incB();
+      });
+    });
+
+    expect(result.current.countA).toBe(1);
+    expect(result.current.countB).toBe(1);
+    expect(renders[renders.length - 1]).toEqual([1, 1]);
+    expect(renders).not.toContainEqual([1, 0]);
+    expect(renders).not.toContainEqual([0, 1]);
+  });
+});
+
+describe("@acoolhq/react-tiny-store - error cases (outside <Provider>)", () => {
   type AppState = { count: number; ui: { modalOpen: boolean } };
 
   const {

@@ -15,6 +15,6 @@ pnpm add @acoolhq/react-tiny-store
 ```
 
 - **Start here:** [Getting Started](./getting-started.md)  
-- **Dive deeper:** [Concepts](./guides/concepts.md) · [SSR & Hydration](./guides/ssr-hydration.md) · [Performance Patterns](./guides/perf-patterns.md)  
-- **API:** [Reference](./api/)  
+- **Dive deeper:** [Concepts](./guides/concepts.md) · [SSR & Hydration](./guides/ssr-hydration.md) · [Batching Updates](./guides/batching.md) · [Performance Patterns](./guides/perf-patterns.md)  
+- **API:** [Reference](./api/) · [Examples](./examples.md)  
 - **Live Bench:** [Benchmarks](./benchmarks.md)

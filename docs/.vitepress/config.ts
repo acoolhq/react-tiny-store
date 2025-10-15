@@ -22,13 +22,17 @@ export default defineConfig({
         items: [
           { text: "Concepts", link: "/guides/concepts" },
           { text: "SSR & Hydration", link: "/guides/ssr-hydration" },
+          { text: "Batching Updates", link: "/guides/batching" },
           { text: "Performance Patterns", link: "/guides/perf-patterns" },
           { text: "Benchmarks", link: "/benchmarks" },
         ],
       },
       {
         text: "API Reference",
-        link: "/api/",
+        items: [
+          { text: "Typed Reference", link: "/api/" },
+          { text: "Examples", link: "/examples" },
+        ],
       },
     ],
     socialLinks: [

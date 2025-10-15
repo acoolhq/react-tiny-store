@@ -1,9 +1,10 @@
+export { createContextSync } from "./lib/createContextSync";
+export { batch, makeStore, type Store } from "./lib/store";
 export {
-  createContextSync,
+  type StoreAccess,
+  type RootFns,
   createStoreSlice,
-  makeStore,
   useStoreActions,
   useStoreSelector,
   bindStoreActions,
-} from "./lib/createContextSync";
-export type { Store, StoreAccess } from "./lib/createContextSync";
+} from "./lib/hooks";
