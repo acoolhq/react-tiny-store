@@ -1,40 +1,24 @@
-# Batching updates
+# Batching
 
-`batch(fn)` queues store notifications while the callback runs.  
-Every call to `store.setState` / `store.replace` / `store.reset` still mutates the store's state synchronously—`store.getState()` inside the batch already sees the updated value. The only thing deferred is the notifier dispatch. Once the outermost batch completes we flush the notifier queue once, and because selectors subscribe through `useSyncExternalStore`, React components that read the store through `useSelector`, `useStoreSelector`, or slice hooks re-render exactly once.
-
-```ts
-import { batch, makeStore } from "@acoolhq/react-tiny-store";
-
-const store = makeStore({ count: 0 });
-
-store.subscribe(() => {
-  console.log("render", store.getState().count);
-});
-
-batch(() => {
-  store.setState((prev) => ({ count: prev.count + 1 }));
-  store.setState((prev) => ({ count: prev.count + 1 }));
-  console.log(store.getState().count); // 2 (state is current inside the batch)
-}); // listener logs once: "render 2"
-```
+`batch(fn)` is the store’s optional notifier buffer. Call it when a controller fires several back-to-back `setState` / `replace` / `reset` calls and you want subscribers to react once with the final state instead of after every intermediate update. State still mutates synchronously; batching simply defers the subscriber notification pass.
 
 ## How it works
 
-1. `batch` increments an internal depth counter and runs your callback.  
-2. While depth > 0, `setState` / `replace` / `reset` synchronously update the store state and enqueue the store's notifier instead of calling it.  
-3. When the outermost batch exits, the queue is flushed (deduped `Set`); each notifier calls the subscribers registered by `useSyncExternalStore`.  
-4. React sees the notifier fire and synchronously re-reads the snapshot, yielding exactly one render per store.
+1. Entering `batch` increments an internal depth counter.
+2. While depth > 0, updates mutate the store immediately but queue the store’s notifier instead of firing it. A `Set` dedupes multiple enqueues.
+3. When the outermost batch exits, the queue flushes exactly once. Subscribers run a single notification pass no matter how many updates happened inside.
+4. React receives that lone notification and re-checks selector values. Its own render batching rules still apply—`batch` just prevents the store from pinging subscribers hundreds of times.
 
-If a nested batch throws, the finally block still decrements depth, so the queue flushes (or remains queued for the parent) before the error re-throws.
+## How this differs from React’s batching
 
-## When to batch
+- React already collapses renders: if a selector yields new values mid-event, React still commits once with the final value.
+- The cost is in notifications: every `store.setState` triggers a notify → snapshot read → compare loop. Without batching, you pay that loop for each update, even though React only renders once.
+- Batching cuts the loop count: mutations still run synchronously, but subscribers are notified once at the end. That’s where the wall-time win comes from—fewer notification cycles, not different render semantics.
+- Internal vs external: `useState`/`useReducer` updates invoked in React events are auto-batched by React. External stores notify React from the outside, so nothing coalesces them for you unless you use `batch`.
 
-Use `batch` only for niche situations where multiple store mutations would otherwise trigger back-to-back selector renders. Typical cases:
+## When to use it
 
-- Controllers or async flows that call `setState` / `replace` / `reset` more than once while updating UI driven by `useSelector`/`useStoreSelector` (slice hooks are built on the same selector subscription).  
-- Coordinating updates across several stores so the UI never sees intermediate values.
-
-Plain `store.getState()` reads do not subscribe to changes, so they won't cause renders regardless of batching.
-
-> Use `batch` only for this store's updates. React already batches its own `useState` / `useReducer` writes inside event handlers; reach for `batch` when you're grouping *store* updates triggered from async flows, external listeners, or anywhere React's built-in batching doesn't apply.
+- Normal app flows: call `setState` directly; batching is overkill.
+- Multi-update bursts: wrap them in `batch` so controllers (optimistic updates, cross-slice coordination, benchmark loops) trigger one subscriber pass instead of many.
+- Keep React’s own `useState` / `useReducer` calls outside `batch`; React already batches those internally.
+- Plain `store.getState()` reads aren’t subscriptions, so batching has no effect on them.

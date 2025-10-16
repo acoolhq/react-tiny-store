@@ -1,7 +1,7 @@
 {
   "name": "@acoolhq/react-tiny-store",
   "version": "0.1.15",
-  "description": "Tiny useSyncExternalStore-powered context store: useSelector, useActions, createSlice — hydrate-safe, reducer-less.",
+  "description": "Tiny useSyncExternalStore-powered context store",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -27,7 +27,7 @@
     "type": "git",
     "url": "git+https://github.com/acoolhq/react-tiny-store.git"
   },
-  "homepage": "https://github.com/acoolhq/react-tiny-store#readme",
+  "homepage": "https://acoolhq.github.io/react-tiny-store/",
   "bugs": {
     "url": "https://github.com/acoolhq/react-tiny-store/issues"
   },
