@@ -4,7 +4,7 @@ Test-drive real rendering behavior in the companion app:
 **Live bench → <https://acoolhq.github.io/rts-bench/>**
 
 - **RTS (store + selector)** — baseline `makeStore` + `useStoreSelector`.
-- **RTS + Batching** — same store, but updates wrapped in [`batch`](./guides/batching.md) to coalesce bursts triggered by controllers.
+- **RTS + Batching** — same store, but updates wrapped in [`batch`](../guides/batching.md) to coalesce bursts triggered by controllers.
 - **RTS + Context (createContextSync)** — provider + selectors built from the library.
 - **Context + useState** — naïve context that re-renders every leaf on any change.
 - **Context + useReducer** — similar baseline using a reducer.

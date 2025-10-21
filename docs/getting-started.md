@@ -93,5 +93,5 @@ function TodoList() {
 ## Next steps
 - Understand the model: [Concepts](./guides/concepts.md)  
 - Hydrate on SSR: [SSR & Hydration](./guides/ssr-hydration.md)  
-- Tune performance: [Performance Patterns](./guides/perf-patterns.md)  
+- Tune performance: [Performance Patterns](./performance/perf-patterns.md)  
 - Explore the API: [Reference](./api/)
